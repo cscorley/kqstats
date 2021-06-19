@@ -1,28 +1,51 @@
 import { GameStats, GameStatsType, KQStat } from '../../lib/GameStats';
-import * as socket_io_client from 'socket.io-client';
 import * as React from 'react';
 import sprites from '../img/sprites';
+import { KQStream, KQStreamOptions } from '../../lib/KQStream';
 
 abstract class KillboardBase extends React.Component {
   state: GameStatsType = GameStats.defaultGameStats;
 
-  private io: SocketIOClient.Socket;
+  stream: KQStream;
+  gameStats: GameStats;
 
   static getCrowns(n: number) {
-    const crown = <img className="crown" src={sprites.crown}/>;
+    const crown = <img className="crown" src={sprites.crown} />;
     const html: JSX.Element[] = [];
     for (let i = 0; i < n; i++) {
       html.push(crown);
     }
     return html;
-  } 
+  }
+
+  async connect(stream: KQStream, address: string) {
+    if (address === undefined) {
+      const ip = 'kq.lan';
+      address = `ws://${ip}:12749`;
+    }
+    console.log(`Connecting to ${address}...`);
+    try {
+      await stream.connect(address);
+    } catch (error) {
+      console.log(`Connection failed, waiting 5 seconds...`, error);
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve(this.connect(stream, address));
+        }, 5 * 1000);
+      });
+    }
+    console.log('Connected!');
+  }
 
   constructor(props: {}) {
     super(props);
-    this.io = socket_io_client(`http://${window.location.hostname}:8000`, {
-      autoConnect: false
-    });
-    this.io.on('stat', (data: KQStat) => {
+
+    const options: KQStreamOptions = {};
+    this.stream = new KQStream(options);
+    this.gameStats = new GameStats(this.stream);
+    this.gameStats.start();
+
+    this.gameStats.on('change', (data: KQStat) => {
       this.setState((prevState) => {
         let characterStats = prevState[data.character];
         if (characterStats === undefined) {
@@ -30,11 +53,10 @@ abstract class KillboardBase extends React.Component {
         }
         characterStats[data.statistic] = data.value;
         return {
-          [data.character]: characterStats
+          [data.character]: characterStats,
         };
       });
     });
-    this.io.open();
   }
 
   componentWillMount() {
@@ -42,9 +64,8 @@ abstract class KillboardBase extends React.Component {
     document.body.style.color = 'white';
   }
 
-  componentWillUnmount() {
-    document.body.style.backgroundColor = null;
-    document.body.style.color = null;
+  async componentDidMount() {
+    await this.connect(this.stream, 'ws://kq.lan:12749');
   }
 }
 
