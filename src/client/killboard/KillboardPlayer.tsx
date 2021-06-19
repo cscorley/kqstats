@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Character } from '../../lib/models/KQStream';
 import sprites from '../img/sprites';
-import KillboardBase from './KillboardBase';
+import { KillboardBase, KillboardBaseProps } from './KillboardBase';
 
 interface StatProps {
   name: string;
@@ -17,7 +17,7 @@ const Stat = (props: StatProps) => (
   </div>
 );
 
-interface KillboardPlayerProps {
+interface KillboardPlayerProps extends KillboardBaseProps {
   character: Character;
 }
 

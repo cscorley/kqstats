@@ -1,4 +1,4 @@
-import { Route, RouteComponentProps, Switch } from 'react-router';
+import { Route, RouteComponentProps, Switch, useLocation } from 'react-router';
 import * as React from 'react';
 import { Page404 } from '../404';
 import KillboardFull from './KillboardFull';
@@ -6,104 +6,91 @@ import KillboardHorizontal from './KillboardHorizontal';
 import KillboardVertical from './KillboardVertical';
 import KillboardPlayer from './KillboardPlayer';
 import './Killboard.css';
+import { Character } from '../../lib/models/KQStream';
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 class Killboard extends React.Component<RouteComponentProps<{}>> {
   render() {
+    const query = useQuery();
+    const queryAddress = query.get('address');
+    let address = 'kq.local';
+    if (queryAddress) {
+      address = queryAddress;
+    }
+
     return (
       <Switch>
         <Route
           exact={true}
           path={`${this.props.match.path}/full`}
-          component={KillboardFull}
+          render={() => <KillboardFull address={address} />}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/horizontal/blue`}
-          render={(props) => (
-            <KillboardHorizontal
-              team="blue"
-              mirror={false}
-            />
+          render={() => (
+            <KillboardHorizontal address={address} team="blue" mirror={false} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/horizontal/gold`}
-          render={(props) => (
-            <KillboardHorizontal
-              team="gold"
-              mirror={false}
-            />
+          render={() => (
+            <KillboardHorizontal address={address} team="gold" mirror={false} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/horizontal/blue/mirror`}
-          render={(props) => (
-            <KillboardHorizontal
-              team="blue"
-              mirror={true}
-            />
+          render={() => (
+            <KillboardHorizontal address={address} team="blue" mirror={true} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/horizontal/gold/mirror`}
-          render={(props) => (
-            <KillboardHorizontal
-              team="gold"
-              mirror={true}
-            />
+          render={() => (
+            <KillboardHorizontal address={address} team="gold" mirror={true} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/vertical/blue`}
-          render={(props) => (
-            <KillboardVertical
-              team="blue"
-            />
-          )}
+          render={() => <KillboardVertical address={address} team="blue" />}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/vertical/gold`}
-          render={(props) => (
-            <KillboardVertical
-              team="gold"
-            />
-          )}
+          render={() => <KillboardVertical address={address} team="gold" />}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/vertical/blue/mirror`}
-          render={(props) => (
-            <KillboardVertical
-              team="blue"
-              mirror={true}
-            />
+          render={() => (
+            <KillboardVertical address={address} team="blue" mirror={true} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/vertical/gold/mirror`}
-          render={(props) => (
-            <KillboardVertical
-              team="gold"
-              mirror={true}
-            />
+          render={() => (
+            <KillboardVertical address={address} team="gold" mirror={true} />
           )}
         />
         <Route
           exact={true}
           path={`${this.props.match.path}/player/:character`}
           render={(props) => (
-            <KillboardPlayer character={props.match.params.character} />
+            <KillboardPlayer
+              address={address}
+              character={Character[props.match.params.character]}
+            />
           )}
         />
-        <Route
-          component={Page404}
-        />
+        <Route component={Page404} />
       </Switch>
     );
   }
